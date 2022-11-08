@@ -1,6 +1,7 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 
 public class SaidaThread extends Thread implements Runnable {
 
@@ -8,6 +9,7 @@ public class SaidaThread extends Thread implements Runnable {
     public DatagramSocket clientSocket;
     public InetAddress IPAddress;
     public Integer porta;
+    public double[] temposResposta;
 
     public SaidaThread(Controlador controlador) {
         this.controlador = controlador;
@@ -18,6 +20,20 @@ public class SaidaThread extends Thread implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.temposResposta = new double[10];
+    }
+
+    @Override
+    public String toString() {
+        String texto = "{ ";
+        for (int i = 0; i < temposResposta.length; i++) {
+            texto += temposResposta[i] + " ";
+            if(i < 9) {
+                texto += "| ";
+            }
+        }
+        texto += "}";
+        return texto;
     }
 
     public void run() {
@@ -47,23 +63,36 @@ public class SaidaThread extends Thread implements Runnable {
         DatagramPacket sendPacket = new DatagramPacket(sendData,
                 sendData.length, IPAddress, porta);
 
+        Long inicio = System.currentTimeMillis();
         try {
             clientSocket.send(sendPacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return receberPacote(receiveData);
+        return receberPacote(receiveData, inicio);
     }
 
-    public DatagramPacket receberPacote(byte[] receiveData) {
+    public DatagramPacket receberPacote(byte[] receiveData, Long inicio) {
         DatagramPacket receivePacket = new DatagramPacket(receiveData,
                 receiveData.length);
 
         try {
             clientSocket.receive(receivePacket);
+            Long fim = System.currentTimeMillis();
+            calcularData(inicio, fim);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return receivePacket;
+    }
+
+    private void calcularData(Long inicio, Long fim) {
+        Long tempo = fim - inicio;
+        if(this.temposResposta.length < 10) {
+            this.temposResposta[this.temposResposta.length] = tempo;
+        } else {
+            this.temposResposta = new double[10];
+            this.temposResposta[0] = tempo;
+        }
     }
 }

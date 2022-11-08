@@ -25,6 +25,7 @@ public class Controlador extends JFrame implements Runnable {
         sairButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.out.println("Tempos de Resposta: \nTemperatura: " + temperaturaThread.toString() + "ms\nVolume: " + tanqueThread.toString() + "ms\nSaída: " + saidaThread.toString() + "ms");
                 dispose();
             }
         });
@@ -38,7 +39,7 @@ public class Controlador extends JFrame implements Runnable {
 
     @Override
     public void run() {
-        if(!isVisible()) {
+        if (!isVisible()) {
             this.setVisible(true);
         } else {
             System.out.println("Janela já está aberta");
