@@ -1,9 +1,10 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Date;
+import java.time.LocalTime;
 
 public class TemperaturaThread extends Thread implements Runnable {
 
@@ -11,7 +12,8 @@ public class TemperaturaThread extends Thread implements Runnable {
     public DatagramSocket clientSocket;
     public InetAddress IPAddress;
     public Integer porta;
-    public double[] temposResposta;
+    public File arquivoTempos;
+    public int[] temposRespostas;
 
     public TemperaturaThread(Controlador controlador) {
         this.controlador = controlador;
@@ -22,20 +24,8 @@ public class TemperaturaThread extends Thread implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.temposResposta = new double[10];
-    }
-
-    @Override
-    public String toString() {
-        String texto = "{ ";
-        for (int i = 0; i < temposResposta.length; i++) {
-            texto += temposResposta[i] + " ";
-            if(i < 9) {
-                texto += "| ";
-            }
-        }
-        texto += "}";
-        return texto;
+        this.arquivoTempos = new File("C:\\Users\\felipe_mielke-vieira\\Desktop\\tempos.txt");
+        this.temposRespostas = new int[10];
     }
 
     public void run() {
@@ -65,7 +55,7 @@ public class TemperaturaThread extends Thread implements Runnable {
         DatagramPacket sendPacket = new DatagramPacket(sendData,
                 sendData.length, IPAddress, porta);
 
-        Long inicio = System.currentTimeMillis();
+        LocalTime inicio = java.time.LocalTime.now();
         try {
             clientSocket.send(sendPacket);
         } catch (Exception e) {
@@ -74,13 +64,13 @@ public class TemperaturaThread extends Thread implements Runnable {
         return receberPacote(receiveData, inicio);
     }
 
-    public DatagramPacket receberPacote(byte[] receiveData, Long inicio) {
+    public DatagramPacket receberPacote(byte[] receiveData, LocalTime inicio) {
         DatagramPacket receivePacket = new DatagramPacket(receiveData,
                 receiveData.length);
 
         try {
             clientSocket.receive(receivePacket);
-            Long fim = System.currentTimeMillis();
+            LocalTime fim = java.time.LocalTime.now();
             calcularData(inicio, fim);
         } catch (Exception e) {
             e.printStackTrace();
@@ -88,13 +78,30 @@ public class TemperaturaThread extends Thread implements Runnable {
         return receivePacket;
     }
 
-    private void calcularData(Long inicio, Long fim) {
-        Long tempo = fim - inicio;
-        if(this.temposResposta.length < 10) {
-            this.temposResposta[this.temposResposta.length] = tempo;
+    private void calcularData(LocalTime inicio, LocalTime fim) {
+        Integer tempo = fim.getNano() - inicio.getNano();
+        if(temposRespostas[9] >= 0) {
+            if(tempo != 0) {
+                editarArquivo(tempo);
+                temposRespostas = new int[10];
+            }
         } else {
-            this.temposResposta = new double[10];
-            this.temposResposta[0] = tempo;
+            temposRespostas[temposRespostas.length] = tempo;
+        }
+    }
+
+    private void editarArquivo(Integer tempo) {
+        try {
+            FileWriter fileWriter = new FileWriter(arquivoTempos, true);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+            writer.write("Tempo: " + java.time.LocalTime.now() + " - " + tempo / 1000000 + " ms  |  " + tempo + " ns");
+            writer.newLine();
+
+            writer.close();
+            fileWriter.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

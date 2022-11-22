@@ -25,8 +25,8 @@ public class Controlador extends JFrame implements Runnable {
         sairButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Tempos de Resposta: \nTemperatura: " + temperaturaThread.toString() + "ms\nVolume: " + tanqueThread.toString() + "ms\nSaída: " + saidaThread.toString() + "ms");
                 dispose();
+                System.exit(0);
             }
         });
     }
